@@ -1,0 +1,19 @@
+{
+  "updated": "2026-04-14",
+  "links": [
+    {
+      "id": "gemini",
+      "label": "Gemini（先用官方入口）",
+      "url": "https://gemini.google.com/"
+    },
+    {
+      "id": "chatgpt",
+      "label": "ChatGPT（先用官方入口）",
+      "url": "https://chat.openai.com/"
+    }
+  ],
+  "notes": [
+    "若你有自製 Gem / GPTs：把『發佈網址』替換到 links.url。",
+    "建議先把問題描述：寶寶月齡/狀況/你想達成的目標/你已有的資訊（例：身高體重、疫苗接種、是否過敏）。"
+  ]
+}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>少撐一點｜育兒資源網站</title>
+  <meta name="description" content="新手爸媽一站式育兒資源：AI 諮詢入口、階段點檢表、補助與疫苗資訊。" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要內容</a>
+
+  <header class="hero">
+    <h1>少撐一點｜育兒資源網站</h1>
+    <p>你不用什麼都懂，但你要知道現在該做什麼。</p>
+
+    <p class="muted" style="margin:6px 0 0">
+      資料可信度：<span class="badge done">官方來源連結</span>
+      ｜最後更新：<strong><span id="last-updated">—</span></strong>
+      <span class="muted">（補助/疫苗/點檢表以官方來源與醫囑為準）</span>
+    </p>
+
+    <nav>
+      <a href="#ai">AI 諮詢</a>
+      <a href="#checklist">階段點檢表</a>
+      <a href="#subsidy">補助資訊</a>
+      <a href="#vaccine">疫苗提醒</a>
+      <a href="#about">關於</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="ai" class="card">
+      <h2>📱 AI 育兒諮詢</h2>
+      <p>用 AI 快速釐清：你現在的情況、下一步、需要準備的文件/問題清單。</p>
+      <p class="muted">預設連到官方入口；若你有自製 Gem / GPTs，替換 <code>data/ai.json</code> 的 URL 即可。</p>
+      <div id="ai-links"></div>
+    </section>
+
+    <section id="checklist" class="card">
+      <h2>📋 階段點檢表</h2>
+      <p>點選階段查看任務，可勾選進度（儲存在本機瀏覽器）。</p>
+      <div id="stage-tabs"></div>
+      <div id="stage-content"></div>
+    </section>
+
+    <section id="subsidy" class="card">
+      <h2>💰 補助與優惠資訊</h2>
+      <p class="muted">以官方來源為準；本頁提供一頁式入口與 22 縣市官方連結彙整。</p>
+      <div id="subsidy-content"></div>
+    </section>
+
+    <section id="vaccine" class="card">
+      <h2>💉 疫苗提醒（MVP 靜態）</h2>
+      <p class="muted">以官方來源與兒童健康手冊為準；本頁提供關鍵月齡節點簡表。</p>
+      <div id="vaccine-content"></div>
+    </section>
+
+    <section id="about" class="card">
+      <h2>👋 關於少撐一點</h2>
+      <p>PM 雙寶爸 Joseph，把產品管理方法用在育兒資訊整理，讓新手爸媽少踩坑。</p>
+      <div class="btns">
+        <a class="btn" href="https://josephnext.substack.com" target="_blank" rel="noopener">訂閱電子報</a>
+        <a class="btn" href="https://portaly.cc/joseph-next" target="_blank" rel="noopener">預約 15 分鐘諮詢</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="scripts/checklist.js"></script>
+  <script src="scripts/ai.js"></script>
+  <script src="scripts/data.js"></script>
+  <script src="scripts/meta.js"></script>
+</body>
+</html>

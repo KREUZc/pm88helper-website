@@ -1,0 +1,81 @@
+:root{
+  --bg:#FAF3E8;
+  --surface:#FFFFFF;
+  --text:#264653;
+  --text-muted:#4B5563;
+  --border:#E5E7EB;
+
+  --cta-primary:#E76F51;
+  --cta-primary-hover:#D65E41;
+  --cta-secondary:#FFFFFF;
+
+  --state-urgent:#DC2626;
+  --state-soon:#D97706;
+  --state-done:#059669;
+
+  --focus:#2563EB;
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;max-width:920px;margin:0 auto;padding:16px;background:var(--bg);color:var(--text);line-height:1.55}
+.hero{padding:28px 0}
+.hero h1{margin:0 0 8px}
+.hero nav{display:flex;gap:10px;flex-wrap:wrap}
+.hero a{background:var(--surface);padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--text);border:1px solid var(--border);font-weight:600}
+.hero a:hover{border-color:#CBD5E1}
+
+.card{background:var(--surface);border:1px solid #F1F5F9;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;background:var(--cta-primary);color:#fff;padding:10px 12px;border-radius:10px;text-decoration:none;font-weight:700}
+.btn:hover{background:var(--cta-primary-hover)}
+
+#stage-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.stage-btn{border:1px solid var(--border);background:var(--surface);padding:7px 11px;border-radius:999px;cursor:pointer;color:var(--text);font-weight:600}
+.stage-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+.item{display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed #E5E7EB}
+small{color:var(--text-muted)}
+
+.muted{color:var(--text-muted)}
+.mini-block{padding:10px 0;border-bottom:1px dashed #E5E7EB}
+.mini-title{font-weight:700;margin:0 0 4px}
+.mini-summary{color:#374151;margin:0 0 6px}
+.mini-links{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 10px;text-decoration:none;color:var(--text);background:#fff}
+.mini-list{margin:6px 0 0 18px}
+.mini-notes{margin:10px 0 0 18px;color:var(--text-muted)}
+.btn-disabled{background:#9CA3AF;pointer-events:none}
+code{background:#F3F4F6;padding:2px 6px;border-radius:6px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.urgent{background:#FEE2E2;color:var(--state-urgent)}
+.badge.soon{background:#FEF3C7;color:var(--state-soon)}
+.badge.done{background:#DCFCE7;color:var(--state-done)}
+
+/* A11y: visible focus indicator (WCAG 2.4.7) */
+a:focus-visible,
+button:focus-visible,
+.stage-btn:focus-visible{
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* A11y: focus should also work on custom-looking links/buttons */
+.hero a:focus-visible,
+.btn:focus-visible,
+.pill:focus-visible{
+  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+/* A11y: skip link */
+.skip-link{
+  position:absolute;
+  left:-999px;
+  top:8px;
+  background:#fff;
+  color:#111827;
+  padding:8px 12px;
+  border:2px solid var(--focus);
+  border-radius:10px;
+  z-index:9999;
+}
+.skip-link:focus{left:8px;}
