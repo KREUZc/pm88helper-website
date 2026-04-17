@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>少撐一點｜雙薪爸媽本週待辦 (v2 preview)</title>
+  <meta name="description" content="（v2 開發版）15 秒選階段與城市，生成本週 3 件事，快速查看補助與疫苗官方資訊。" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要內容</a>
+
+  <header class="hero">
+    <p class="eyebrow">少撐一點 PM88 Helper</p>
+    <h1>雙薪爸媽，先把本週最重要的 3 件事做完</h1>
+    <p class="lead">先選孩子階段與所在城市，15 秒內完成。系統會用官方資料幫你排出本週待辦。</p>
+    <p class="trust-line">資料來源：官方網站｜最後更新：<strong id="last-updated">—</strong></p>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <section class="card planner" aria-labelledby="planner-title">
+      <h2 id="planner-title">15 秒開始：選階段 + 城市</h2>
+      <p id="planner-help" class="muted">選完後按下按鈕，即可生成你本週最重要的 3 件事。</p>
+      <form id="planner-form" class="planner-form" aria-describedby="planner-help" novalidate>
+        <label for="stage-select">目前階段</label>
+        <select id="stage-select" required></select>
+
+        <label for="city-select">所在城市</label>
+        <select id="city-select" required></select>
+
+        <button id="generate-btn" type="submit" class="btn-primary">生成我的本週待辦</button>
+      </form>
+
+      <div class="shortcut-row" aria-label="快速入口">
+        <a class="chip-link" href="#subsidy-quick">補助速查</a>
+        <a class="chip-link" href="#vaccine-quick">疫苗速查</a>
+        <a class="chip-link" href="#trusted-links">官方來源</a>
+      </div>
+    </section>
+
+    <section class="card todo" aria-labelledby="todo-title">
+      <div class="section-head">
+        <h2 id="todo-title">本週 3 件事</h2>
+        <p id="todo-meta" class="muted">請先選擇階段與城市。</p>
+      </div>
+      <div id="todo-list" class="todo-list" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="grid-2" aria-label="補助與疫苗速查">
+      <article id="subsidy-quick" class="card quick-card" aria-labelledby="subsidy-title">
+        <h2 id="subsidy-title">補助速查</h2>
+        <p class="muted">先看你所在城市的官方申請入口與關鍵提醒。</p>
+        <div id="subsidy-quick-content"></div>
+      </article>
+
+      <article id="vaccine-quick" class="card quick-card" aria-labelledby="vaccine-title">
+        <h2 id="vaccine-title">疫苗速查</h2>
+        <p class="muted">先抓近期節點，再去官方頁核對最新排程。</p>
+        <div id="vaccine-quick-content"></div>
+      </article>
+    </section>
+
+    <section id="trusted-links" class="card" aria-labelledby="trusted-title">
+      <h2 id="trusted-title">官方來源連結</h2>
+      <div id="trusted-links-content" class="trusted-list"></div>
+    </section>
+  </main>
+
+  <script src="scripts/app.js"></script>
+</body>
+</html>
