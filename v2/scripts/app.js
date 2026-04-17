@@ -1,13 +1,7 @@
-const STORAGE_KEY = "pm88-hermes-onboarding-v1";
-
-const stageToVaccineAge = {
-  postpartum: "出生",
-  "baby-0-12y": "2 個月",
-  "baby-1-4y": "12-18 個月（常見節點）",
-  "baby-4-6y": "4-6 歲（常見節點）"
-};
+const STORAGE_KEY = "pm88-v2-state";
 
 const app = {
+  mapping: null,
   checklist: null,
   subsidy: null,
   vaccine: null,
@@ -44,14 +38,6 @@ function latestUpdatedDate(...dates) {
     .sort((a, b) => b - a)[0];
 }
 
-function getStageById(stageId) {
-  return (app.checklist?.stages || []).find((s) => s.id === stageId);
-}
-
-function getCityByName(cityName) {
-  return (app.subsidy?.locals || []).find((c) => c.city === cityName);
-}
-
 function getSavedState() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -77,13 +63,59 @@ function setChecked(stageId, itemId, checked) {
   saveState({ checks });
 }
 
-function renderTodoList(stageId, cityName) {
-  const stage = getStageById(stageId);
-  const items = (stage?.items || []).slice(0, 3);
-  const checkMap = getCheckMap();
+function mappingStage(stageId) {
+  return (app.mapping?.stages || []).find((s) => s.id === stageId);
+}
 
+function checklistStage(stageId) {
+  return (app.checklist?.stages || []).find((s) => s.id === stageId);
+}
+
+function getCityByName(cityName) {
+  return (app.subsidy?.locals || []).find((c) => c.city === cityName);
+}
+
+function renderLastUpdated() {
+  const latest = latestUpdatedDate(
+    app.mapping.updated,
+    app.checklist.updated,
+    app.subsidy.updated,
+    app.vaccine.updated
+  );
+  const target = document.getElementById("last-updated");
+  target.textContent = latest ? formatDate(latest.toISOString().slice(0, 10)) : "-";
+}
+
+function fillSelectOptions() {
+  app.stageSelect.innerHTML = "";
+  app.citySelect.innerHTML = "";
+
+  (app.mapping.stages || []).forEach((stage) => {
+    const option = document.createElement("option");
+    option.value = stage.id;
+    option.textContent = stage.label;
+    app.stageSelect.append(option);
+  });
+
+  (app.subsidy.locals || []).forEach((city) => {
+    const option = document.createElement("option");
+    option.value = city.city;
+    option.textContent = city.city;
+    app.citySelect.append(option);
+  });
+}
+
+function renderTodoList(stageId, cityName) {
+  const mStage = mappingStage(stageId);
+  const libStage = checklistStage(mStage?.todo?.stageId || stageId);
+  const stageItems = libStage?.items || [];
+
+  const wanted = new Set(mStage?.todo?.top3 || []);
+  const items = stageItems.filter((it) => wanted.has(it.id)).slice(0, 3);
+
+  const checkMap = getCheckMap();
   app.todoList.innerHTML = "";
-  app.todoMeta.textContent = `階段：${stage?.name || "-"}｜城市：${cityName || "-"}`;
+  app.todoMeta.textContent = `階段：${mStage?.label || "-"}｜城市：${cityName || "-"}`;
 
   if (items.length === 0) {
     const empty = document.createElement("p");
@@ -93,8 +125,8 @@ function renderTodoList(stageId, cityName) {
     return;
   }
 
-  items.forEach((item, idx) => {
-    const key = `${stageId}::${item.id || idx}`;
+  items.forEach((item) => {
+    const key = `${stageId}::${item.id}`;
 
     const row = document.createElement("article");
     row.className = "todo-item";
@@ -106,9 +138,7 @@ function renderTodoList(stageId, cityName) {
     cb.type = "checkbox";
     cb.checked = Boolean(checkMap[key]);
     cb.setAttribute("aria-label", `勾選待辦：${item.title}`);
-    cb.addEventListener("change", () => {
-      setChecked(stageId, item.id || String(idx), cb.checked);
-    });
+    cb.addEventListener("change", () => setChecked(stageId, item.id, cb.checked));
 
     const content = document.createElement("div");
     const strong = document.createElement("strong");
@@ -129,7 +159,6 @@ function renderCityQuick(cityName) {
   const central = app.subsidy.central?.sources?.[0];
 
   cityWrap.innerHTML = "";
-
   if (!city) {
     cityWrap.textContent = "找不到城市資料，請稍後再試。";
     return;
@@ -169,38 +198,54 @@ function renderCityQuick(cityName) {
   cityWrap.append(heading, summary, links);
 }
 
-function renderVaccineQuick(stageId) {
-  const vaccineWrap = document.getElementById("vaccine-quick-content");
-  vaccineWrap.innerHTML = "";
-
-  const preferredAge = stageToVaccineAge[stageId] || "2 個月";
+function findTimelineIndexByAge(ageLabel) {
   const timeline = app.vaccine.timeline || [];
-  const idx = Math.max(
-    timeline.findIndex((row) => row.age === preferredAge),
-    0
-  );
-  const focusRows = timeline.slice(idx, idx + 2);
+  const idx = timeline.findIndex((row) => row.age === ageLabel);
+  return idx >= 0 ? idx : 0;
+}
 
-  const listHeading = document.createElement("h3");
-  listHeading.className = "quick-subtitle";
-  listHeading.textContent = "下一步時間點";
+function renderVaccineQuick(stageId) {
+  const wrap = document.getElementById("vaccine-quick-content");
+  wrap.innerHTML = "";
+
+  const mStage = mappingStage(stageId);
+  const cfg = mStage?.vaccine;
+
+  const title = document.createElement("h3");
+  title.className = "quick-subtitle";
+  title.textContent = "疫苗提醒";
+
+  if (!cfg || cfg.mode === "note") {
+    const ul = document.createElement("ul");
+    (cfg?.notes || ["（待補）"]).forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      ul.append(li);
+    });
+    wrap.append(title, ul);
+    return;
+  }
+
+  const anchorAge = cfg.anchorAge || "2 個月";
+  const take = Number(cfg.take || 2);
+  const idx = findTimelineIndexByAge(anchorAge);
+  const focusRows = (app.vaccine.timeline || []).slice(idx, idx + take);
 
   const ul = document.createElement("ul");
   focusRows.forEach((row) => {
     const li = document.createElement("li");
     const label = document.createElement("strong");
     label.textContent = `${row.age}：`;
-    const text = document.createTextNode(` ${(row.items || []).join("、")}`);
-    li.append(label, text);
+    li.append(label, document.createTextNode(` ${(row.items || []).join("、")}`));
     ul.append(li);
   });
 
-  const sourceHeading = document.createElement("h3");
-  sourceHeading.className = "quick-subtitle";
-  sourceHeading.textContent = "來源連結";
+  const sourcesTitle = document.createElement("h3");
+  sourcesTitle.className = "quick-subtitle";
+  sourcesTitle.textContent = "官方來源";
 
-  const sourceWrap = document.createElement("div");
-  sourceWrap.className = "todo-links";
+  const sourcesWrap = document.createElement("div");
+  sourcesWrap.className = "todo-links";
   const sources = (app.vaccine.sources || []).slice(0, 2);
 
   if (sources.length > 0) {
@@ -210,8 +255,8 @@ function renderVaccineQuick(stageId) {
       a.href = src.url || "#";
       a.target = "_blank";
       a.rel = "noopener";
-      a.textContent = src.label || "官方來源（待補）";
-      sourceWrap.append(a);
+      a.textContent = src.label || "官方來源";
+      sourcesWrap.append(a);
     });
   } else {
     const placeholder = document.createElement("a");
@@ -219,87 +264,10 @@ function renderVaccineQuick(stageId) {
     placeholder.href = "#";
     placeholder.setAttribute("aria-disabled", "true");
     placeholder.textContent = "官方來源（待補）";
-    sourceWrap.append(placeholder);
+    sourcesWrap.append(placeholder);
   }
 
-  vaccineWrap.append(listHeading, ul, sourceHeading, sourceWrap);
-}
-
-function renderTrustedLinks() {
-  const wrap = document.getElementById("trusted-links-content");
-  wrap.innerHTML = "";
-
-  const groups = [
-    {
-      title: "補助官方來源",
-      links: [
-        ...(app.subsidy.central?.sources || []),
-        ...app.subsidy.locals
-          .slice(0, 3)
-          .map((x) => ({ label: `${x.city} 官方入口`, url: x.official_url }))
-      ]
-    },
-    {
-      title: "疫苗官方來源",
-      links: app.vaccine.sources || []
-    }
-  ];
-
-  groups.forEach((group) => {
-    const card = document.createElement("article");
-    card.className = "trust-item";
-    const h3 = document.createElement("h3");
-    h3.textContent = group.title;
-    card.append(h3);
-
-    const linksWrap = document.createElement("div");
-    linksWrap.className = "todo-links";
-
-    group.links
-      .filter((x) => x?.url)
-      .forEach((link) => {
-        const a = document.createElement("a");
-        a.className = "pill";
-        a.href = link.url;
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = link.label || "官方連結";
-        linksWrap.append(a);
-      });
-
-    card.append(linksWrap);
-    wrap.append(card);
-  });
-}
-
-function fillSelectOptions() {
-  app.stageSelect.innerHTML = "";
-  app.citySelect.innerHTML = "";
-
-  (app.checklist.stages || []).forEach((stage) => {
-    const option = document.createElement("option");
-    option.value = stage.id;
-    option.textContent = stage.name;
-    app.stageSelect.append(option);
-  });
-
-  (app.subsidy.locals || []).forEach((city) => {
-    const option = document.createElement("option");
-    option.value = city.city;
-    option.textContent = city.city;
-    app.citySelect.append(option);
-  });
-}
-
-function renderLastUpdated() {
-  const latest = latestUpdatedDate(
-    app.checklist.updated,
-    app.subsidy.updated,
-    app.vaccine.updated
-  );
-
-  const target = document.getElementById("last-updated");
-  target.textContent = latest ? formatDate(latest.toISOString().slice(0, 10)) : "-";
+  wrap.append(title, ul, sourcesTitle, sourcesWrap);
 }
 
 function renderPlanner(stageId, cityName) {
@@ -315,14 +283,14 @@ function bindPlanner() {
     e.preventDefault();
     const stageId = app.stageSelect.value;
     const cityName = app.citySelect.value;
-
     if (!stageId || !cityName) return;
     renderPlanner(stageId, cityName);
   });
 }
 
 async function init() {
-  [app.checklist, app.subsidy, app.vaccine] = await Promise.all([
+  [app.mapping, app.checklist, app.subsidy, app.vaccine] = await Promise.all([
+    loadJson("data/stage_mapping.json"),
     loadJson("data/checklist.json"),
     loadJson("data/subsidy.json"),
     loadJson("data/vaccine.json")
@@ -336,12 +304,11 @@ async function init() {
   fillSelectOptions();
   bindPlanner();
   renderLastUpdated();
-  renderTrustedLinks();
 
   const saved = getSavedState();
-  const defaultStage = saved.stageId && getStageById(saved.stageId)
+  const defaultStage = saved.stageId && mappingStage(saved.stageId)
     ? saved.stageId
-    : app.checklist.stages?.[0]?.id;
+    : app.mapping.stages?.[0]?.id;
   const defaultCity = saved.cityName && getCityByName(saved.cityName)
     ? saved.cityName
     : app.subsidy.locals?.[0]?.city;
@@ -349,9 +316,7 @@ async function init() {
   if (defaultStage) app.stageSelect.value = defaultStage;
   if (defaultCity) app.citySelect.value = defaultCity;
 
-  if (defaultStage && defaultCity) {
-    renderPlanner(defaultStage, defaultCity);
-  }
+  if (defaultStage && defaultCity) renderPlanner(defaultStage, defaultCity);
 }
 
 init().catch(() => {
