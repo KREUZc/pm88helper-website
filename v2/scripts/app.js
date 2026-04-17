@@ -8,7 +8,8 @@ const app = {
   stageSelect: null,
   citySelect: null,
   todoList: null,
-  todoMeta: null
+  todoMeta: null,
+  vaccinePreg: null
 };
 
 function toUrl(path) {
@@ -198,8 +199,87 @@ function renderCityQuick(cityName) {
   cityWrap.append(heading, summary, links);
 }
 
-function findTimelineIndexByAge(ageLabel) {
+function findTimelineIndexByAge(timeline, ageLabel) {
+  const idx = (timeline || []).findIndex((row) => row.age === ageLabel);
+  return idx >= 0 ? idx : 0;
+}
+
+function vaccineDataset(cfg){
+  if(cfg && cfg.timeline === "pregnancy") return app.vaccinePreg;
+  return app.vaccine;
+}
+
+function renderVaccineQuick(stageId) {
+  const wrap = document.getElementById("vaccine-quick-content");
+  wrap.innerHTML = "";
+
+  const mStage = mappingStage(stageId);
+  const cfg = mStage?.vaccine;
+  const data = vaccineDataset(cfg) || {};
+
+  const title = document.createElement("h3");
+  title.className = "quick-subtitle";
+  title.textContent = "疫苗提醒";
+
+  if (!cfg || cfg.mode === "note") {
+    const ul = document.createElement("ul");
+    (cfg?.notes || ["（待補）"]).forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      ul.append(li);
+    });
+    wrap.append(title, ul);
+    return;
+  }
+
+  const anchorAge = cfg.anchorAge || "2 個月";
+  const take = Number(cfg.take || 2);
+  const idx = findTimelineIndexByAge(data.timeline || [], anchorAge);
+  const focusRows = (data.timeline || []).slice(idx, idx + take);
+
+  const ul = document.createElement("ul");
+  focusRows.forEach((row) => {
+    const li = document.createElement("li");
+    const label = document.createElement("strong");
+    label.textContent = `：`;
+    li.append(label, document.createTextNode(` `));
+    ul.append(li);
+  });
+
+  const sourcesTitle = document.createElement("h3");
+  sourcesTitle.className = "quick-subtitle";
+  sourcesTitle.textContent = "官方來源";
+
+  const sourcesWrap = document.createElement("div");
+  sourcesWrap.className = "todo-links";
+  const sources = (data.sources || []).slice(0, 2);
+
+  if (sources.length > 0) {
+    sources.forEach((src) => {
+      const a = document.createElement("a");
+      a.className = "pill";
+      a.href = src.url || "#";
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = src.label || "官方來源";
+      sourcesWrap.append(a);
+    });
+  } else {
+    const placeholder = document.createElement("a");
+    placeholder.className = "pill is-placeholder";
+    placeholder.href = "#";
+    placeholder.setAttribute("aria-disabled", "true");
+    placeholder.textContent = "官方來源（待補）";
+    sourcesWrap.append(placeholder);
+  }
+
+  wrap.append(title, ul, sourcesTitle, sourcesWrap);
+}
+
+// legacy placeholder
+function _legacy_findTimelineIndexByAge(ageLabel) {
   const timeline = app.vaccine.timeline || [];
+
   const idx = timeline.findIndex((row) => row.age === ageLabel);
   return idx >= 0 ? idx : 0;
 }
@@ -289,11 +369,12 @@ function bindPlanner() {
 }
 
 async function init() {
-  [app.mapping, app.checklist, app.subsidy, app.vaccine] = await Promise.all([
+  [app.mapping, app.checklist, app.subsidy, app.vaccine, app.vaccinePreg] = await Promise.all([
     loadJson("data/stage_mapping.json"),
     loadJson("data/checklist.json"),
     loadJson("data/subsidy.json"),
-    loadJson("data/vaccine.json")
+    loadJson("data/vaccine.json"),
+    loadJson("data/vaccine_pregnancy.json")
   ]);
 
   app.stageSelect = document.getElementById("stage-select");

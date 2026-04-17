@@ -5,65 +5,186 @@
     {
       "id": "pre",
       "label": "備孕期",
-      "todo": { "stageId": "pre", "top3": ["pre1", "pre2", "pre3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "note", "notes": ["孕前如無 MMR 抗體，可評估接種 MMR 三合一疫苗（依醫囑/院所評估）。"] }
+      "todo": {
+        "stageId": "pre",
+        "top3": [
+          "pre1",
+          "pre2",
+          "pre3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "timeline": "pregnancy",
+        "anchorAge": "孕前（備孕）",
+        "take": 2
+      }
     },
     {
       "id": "preg-early",
       "label": "孕初期（0-12 週）",
-      "todo": { "stageId": "preg-early", "top3": ["pe1", "pe2", "pe3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "note", "notes": ["（待補）孕期疫苗請依醫囑；此站目前疫苗月表以新生兒/幼兒為主。"] }
+      "todo": {
+        "stageId": "preg-early",
+        "top3": [
+          "pe1",
+          "pe2",
+          "pe3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "timeline": "pregnancy",
+        "anchorAge": "孕期（任何週，依季節/風險）",
+        "take": 2
+      }
     },
     {
       "id": "preg-mid",
       "label": "孕中期（13-27 週）",
-      "todo": { "stageId": "preg-mid", "top3": ["pm1", "pm2", "pm3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "note", "notes": ["（待補）孕期疫苗請依醫囑；此站目前疫苗月表以新生兒/幼兒為主。"] }
+      "todo": {
+        "stageId": "preg-mid",
+        "top3": [
+          "pm1",
+          "pm2",
+          "pm3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "timeline": "pregnancy",
+        "anchorAge": "孕期（任何週，依季節/風險）",
+        "take": 2
+      }
     },
     {
       "id": "preg-late",
       "label": "孕後期（28 週-生產）",
-      "todo": { "stageId": "preg-late", "top3": ["pl1", "pl2", "pl3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "note", "notes": ["（待補）孕期疫苗請依醫囑；此站目前疫苗月表以新生兒/幼兒為主。"] }
+      "todo": {
+        "stageId": "preg-late",
+        "top3": [
+          "pl1",
+          "pl2",
+          "pl3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "timeline": "pregnancy",
+        "anchorAge": "孕期（任何週，依季節/風險）",
+        "take": 2
+      }
     },
     {
       "id": "birth-day",
       "label": "生產當日",
-      "todo": { "stageId": "birth-day", "top3": ["bd1", "bd2", "bd3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "timeline", "anchorAge": "出生", "take": 2 }
+      "todo": {
+        "stageId": "birth-day",
+        "top3": [
+          "bd1",
+          "bd2",
+          "bd3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "anchorAge": "出生",
+        "take": 2
+      }
     },
     {
       "id": "postpartum",
       "label": "月子期（0-2 個月）",
-      "todo": { "stageId": "postpartum", "top3": ["pp1", "pp2", "pp3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "timeline", "anchorAge": "出生", "take": 2 }
+      "todo": {
+        "stageId": "postpartum",
+        "top3": [
+          "pp1",
+          "pp2",
+          "pp3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "anchorAge": "出生",
+        "take": 2
+      }
     },
     {
       "id": "baby-0-12y",
       "label": "0-1 歲（0-12 個月）",
-      "todo": { "stageId": "baby-0-12y", "top3": ["b01", "b02", "b03"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "timeline", "anchorAge": "2 個月", "take": 2 }
+      "todo": {
+        "stageId": "baby-0-12y",
+        "top3": [
+          "b01",
+          "b02",
+          "b03"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "anchorAge": "2 個月",
+        "take": 2
+      }
     },
     {
       "id": "baby-1-4y",
       "label": "1-4 歲",
-      "todo": { "stageId": "baby-1-4y", "top3": ["b14_1", "b14_2", "b14_3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "timeline", "anchorAge": "12-18 個月（常見節點）", "take": 2 }
+      "todo": {
+        "stageId": "baby-1-4y",
+        "top3": [
+          "b14_1",
+          "b14_2",
+          "b14_3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "anchorAge": "12-18 個月（常見節點）",
+        "take": 2
+      }
     },
     {
       "id": "baby-4-6y",
       "label": "4-6 歲",
-      "todo": { "stageId": "baby-4-6y", "top3": ["b46_1", "b46_2", "b46_3"] },
-      "subsidy": { "mode": "central+city" },
-      "vaccine": { "mode": "timeline", "anchorAge": "4-6 歲（常見節點）", "take": 2 }
+      "todo": {
+        "stageId": "baby-4-6y",
+        "top3": [
+          "b46_1",
+          "b46_2",
+          "b46_3"
+        ]
+      },
+      "subsidy": {
+        "mode": "central+city"
+      },
+      "vaccine": {
+        "mode": "timeline",
+        "anchorAge": "4-6 歲（常見節點）",
+        "take": 2
+      }
     }
   ]
 }
