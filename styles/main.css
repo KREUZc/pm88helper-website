@@ -99,6 +99,10 @@ h2 {
   align-items: end;
 }
 
+#planner-help {
+  margin: 0 0 10px;
+}
+
 label {
   display: block;
   font-weight: 700;
@@ -194,6 +198,11 @@ select {
   cursor: pointer;
 }
 
+.todo-item:focus-within {
+  border-color: #cab18f;
+  box-shadow: 0 0 0 2px rgba(202, 177, 143, 0.25);
+}
+
 .todo-item input[type="checkbox"] {
   margin-top: 4px;
   width: 18px;
@@ -236,6 +245,11 @@ select {
 .quick-card ul {
   margin: 10px 0 0 20px;
   padding: 0;
+}
+
+.quick-subtitle {
+  margin: 10px 0 6px;
+  font-size: 1rem;
 }
 
 .quick-card li {
@@ -281,12 +295,21 @@ select {
   left: 8px;
 }
 
+#main-content:focus {
+  outline: none;
+}
+
 a:focus-visible,
 button:focus-visible,
 select:focus-visible,
 input:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+.is-placeholder {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 @media (max-width: 860px) {

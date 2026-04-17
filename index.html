@@ -17,10 +17,11 @@
     <p class="trust-line">資料來源：官方網站｜最後更新：<strong id="last-updated">—</strong></p>
   </header>
 
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     <section class="card planner" aria-labelledby="planner-title">
       <h2 id="planner-title">15 秒開始：選階段 + 城市</h2>
-      <form id="planner-form" class="planner-form" novalidate>
+      <p id="planner-help" class="muted">選完後按下按鈕，即可生成你本週最重要的 3 件事。</p>
+      <form id="planner-form" class="planner-form" aria-describedby="planner-help" novalidate>
         <label for="stage-select">目前階段</label>
         <select id="stage-select" required></select>
 

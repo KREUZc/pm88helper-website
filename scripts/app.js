@@ -1,5 +1,4 @@
-const APP_STATE_KEY = "pm88-hermes-state";
-const TODO_CHECK_KEY = "pm88-hermes-todo-check";
+const STORAGE_KEY = "pm88-hermes-onboarding-v1";
 
 const stageToVaccineAge = {
   postpartum: "出生",
@@ -45,17 +44,6 @@ function latestUpdatedDate(...dates) {
     .sort((a, b) => b - a)[0];
 }
 
-function getWeekKey() {
-  const now = new Date();
-  const day = now.getDay() || 7;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - day + 1);
-  const y = monday.getFullYear();
-  const m = String(monday.getMonth() + 1).padStart(2, "0");
-  const d = String(monday.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 function getStageById(stageId) {
   return (app.checklist?.stages || []).find((s) => s.id === stageId);
 }
@@ -64,122 +52,73 @@ function getCityByName(cityName) {
   return (app.subsidy?.locals || []).find((c) => c.city === cityName);
 }
 
-function stageAction(stage) {
-  const first = stage?.items?.[0];
-  const second = stage?.items?.[1];
-  return {
-    id: `stage-${stage?.id || "unknown"}`,
-    title: first ? first.title : "確認目前階段重點",
-    tip: second ? `完成後下一步：${second.title}` : "先完成階段首要任務。",
-    links: []
-  };
-}
-
-function subsidyAction(city) {
-  return {
-    id: `subsidy-${city?.city || "unknown"}`,
-    title: city ? `確認 ${city.city} 生育/育兒補助資格與期限` : "確認所在地補助資格與期限",
-    tip: city ? city.summary : "先打開官方頁，確認資格、期限與應備文件。",
-    links: city?.official_url
-      ? [{ label: `${city.city} 官方入口`, url: city.official_url }]
-      : []
-  };
-}
-
-function vaccineAction(stageId) {
-  const preferredAge = stageToVaccineAge[stageId] || "2 個月";
-  const timeline = app.vaccine?.timeline || [];
-  const matched = timeline.find((row) => row.age === preferredAge) || timeline[0];
-  const firstItem = matched?.items?.[0] || "確認近期疫苗節點";
-
-  return {
-    id: `vaccine-${stageId || "default"}`,
-    title: `核對疫苗時程：${matched?.age || "近期節點"}`,
-    tip: firstItem,
-    links: (app.vaccine?.sources || []).slice(0, 1).map((s) => ({ label: s.label, url: s.url }))
-  };
-}
-
-function getSavedPlan() {
+function getSavedState() {
   try {
-    return JSON.parse(localStorage.getItem(APP_STATE_KEY) || "{}");
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
   } catch {
     return {};
   }
 }
 
-function savePlan(stageId, cityName) {
-  localStorage.setItem(
-    APP_STATE_KEY,
-    JSON.stringify({ stageId, cityName, week: getWeekKey() })
-  );
+function saveState(nextState) {
+  const prev = getSavedState();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...prev, ...nextState }));
 }
 
-function getCheckState() {
-  try {
-    return JSON.parse(localStorage.getItem(TODO_CHECK_KEY) || "{}");
-  } catch {
-    return {};
-  }
+function getCheckMap() {
+  return getSavedState().checks || {};
 }
 
-function setCheckState(state) {
-  localStorage.setItem(TODO_CHECK_KEY, JSON.stringify(state));
-}
-
-function makeTodoId(baseId, weekKey, stageId, cityName) {
-  return `${weekKey}-${stageId}-${cityName}-${baseId}`;
+function setChecked(stageId, itemId, checked) {
+  const state = getSavedState();
+  const checks = state.checks || {};
+  const key = `${stageId}::${itemId}`;
+  checks[key] = checked;
+  saveState({ checks });
 }
 
 function renderTodoList(stageId, cityName) {
   const stage = getStageById(stageId);
-  const city = getCityByName(cityName);
-  const weekKey = getWeekKey();
-  const checkState = getCheckState();
-  const todos = [stageAction(stage), subsidyAction(city), vaccineAction(stageId)];
+  const items = (stage?.items || []).slice(0, 3);
+  const checkMap = getCheckMap();
 
   app.todoList.innerHTML = "";
-  app.todoMeta.textContent = `週起始：${weekKey}｜階段：${stage?.name || "-"}｜城市：${cityName || "-"}`;
+  app.todoMeta.textContent = `階段：${stage?.name || "-"}｜城市：${cityName || "-"}`;
 
-  todos.forEach((todo) => {
-    const todoId = makeTodoId(todo.id, weekKey, stageId, cityName);
+  if (items.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "目前沒有可顯示的待辦。";
+    app.todoList.append(empty);
+    return;
+  }
+
+  items.forEach((item, idx) => {
+    const key = `${stageId}::${item.id || idx}`;
+
     const row = document.createElement("article");
     row.className = "todo-item";
 
     const label = document.createElement("label");
+    label.className = "todo-row";
+
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.checked = Boolean(checkState[todoId]);
+    cb.checked = Boolean(checkMap[key]);
+    cb.setAttribute("aria-label", `勾選待辦：${item.title}`);
     cb.addEventListener("change", () => {
-      checkState[todoId] = cb.checked;
-      setCheckState(checkState);
+      setChecked(stageId, item.id || String(idx), cb.checked);
     });
 
     const content = document.createElement("div");
     const strong = document.createElement("strong");
-    strong.textContent = todo.title;
+    strong.textContent = item.title;
     const tip = document.createElement("p");
-    tip.textContent = todo.tip;
+    tip.textContent = item.tip || "";
 
     content.append(strong, tip);
     label.append(cb, content);
     row.append(label);
-
-    if (todo.links?.length) {
-      const linkWrap = document.createElement("div");
-      linkWrap.className = "todo-links";
-      todo.links.forEach((link) => {
-        const a = document.createElement("a");
-        a.className = "pill";
-        a.href = link.url;
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = link.label;
-        linkWrap.append(a);
-      });
-      row.append(linkWrap);
-    }
-
     app.todoList.append(row);
   });
 }
@@ -187,34 +126,47 @@ function renderTodoList(stageId, cityName) {
 function renderCityQuick(cityName) {
   const cityWrap = document.getElementById("subsidy-quick-content");
   const city = getCityByName(cityName) || app.subsidy.locals?.[0];
+  const central = app.subsidy.central?.sources?.[0];
+
   cityWrap.innerHTML = "";
 
-  const p = document.createElement("p");
-  p.className = "city-summary";
-  p.textContent = city?.summary || "尚無資料，請先以地方政府官方頁為準。";
-
-  cityWrap.append(p);
-
-  if (city?.official_url) {
-    const a = document.createElement("a");
-    a.className = "pill";
-    a.href = city.official_url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = `${city.city} 官方入口`;
-    cityWrap.append(a);
+  if (!city) {
+    cityWrap.textContent = "找不到城市資料，請稍後再試。";
+    return;
   }
 
-  const central = app.subsidy.central?.sources?.[0];
+  const heading = document.createElement("h3");
+  heading.className = "quick-subtitle";
+  heading.textContent = city.city;
+
+  const summary = document.createElement("p");
+  summary.className = "city-summary";
+  summary.textContent = city.summary || "尚無摘要，請以官方頁面為準。";
+
+  const links = document.createElement("div");
+  links.className = "todo-links";
+
+  if (city.official_url) {
+    const cityLink = document.createElement("a");
+    cityLink.className = "pill";
+    cityLink.href = city.official_url;
+    cityLink.target = "_blank";
+    cityLink.rel = "noopener";
+    cityLink.textContent = `${city.city} 官方入口`;
+    links.append(cityLink);
+  }
+
   if (central?.url) {
-    const c = document.createElement("a");
-    c.className = "pill";
-    c.href = central.url;
-    c.target = "_blank";
-    c.rel = "noopener";
-    c.textContent = central.label;
-    cityWrap.append(c);
+    const centralLink = document.createElement("a");
+    centralLink.className = "pill";
+    centralLink.href = central.url;
+    centralLink.target = "_blank";
+    centralLink.rel = "noopener";
+    centralLink.textContent = central.label || "中央官方來源";
+    links.append(centralLink);
   }
+
+  cityWrap.append(heading, summary, links);
 }
 
 function renderVaccineQuick(stageId) {
@@ -229,6 +181,10 @@ function renderVaccineQuick(stageId) {
   );
   const focusRows = timeline.slice(idx, idx + 2);
 
+  const listHeading = document.createElement("h3");
+  listHeading.className = "quick-subtitle";
+  listHeading.textContent = "下一步時間點";
+
   const ul = document.createElement("ul");
   focusRows.forEach((row) => {
     const li = document.createElement("li");
@@ -238,18 +194,35 @@ function renderVaccineQuick(stageId) {
     li.append(label, text);
     ul.append(li);
   });
-  vaccineWrap.append(ul);
 
-  (app.vaccine.sources || []).slice(0, 2).forEach((src) => {
-    if (!src.url) return;
-    const a = document.createElement("a");
-    a.className = "pill";
-    a.href = src.url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = src.label;
-    vaccineWrap.append(a);
-  });
+  const sourceHeading = document.createElement("h3");
+  sourceHeading.className = "quick-subtitle";
+  sourceHeading.textContent = "來源連結";
+
+  const sourceWrap = document.createElement("div");
+  sourceWrap.className = "todo-links";
+  const sources = (app.vaccine.sources || []).slice(0, 2);
+
+  if (sources.length > 0) {
+    sources.forEach((src) => {
+      const a = document.createElement("a");
+      a.className = "pill";
+      a.href = src.url || "#";
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = src.label || "官方來源（待補）";
+      sourceWrap.append(a);
+    });
+  } else {
+    const placeholder = document.createElement("a");
+    placeholder.className = "pill is-placeholder";
+    placeholder.href = "#";
+    placeholder.setAttribute("aria-disabled", "true");
+    placeholder.textContent = "官方來源（待補）";
+    sourceWrap.append(placeholder);
+  }
+
+  vaccineWrap.append(listHeading, ul, sourceHeading, sourceWrap);
 }
 
 function renderTrustedLinks() {
@@ -261,7 +234,9 @@ function renderTrustedLinks() {
       title: "補助官方來源",
       links: [
         ...(app.subsidy.central?.sources || []),
-        ...app.subsidy.locals.slice(0, 3).map((x) => ({ label: `${x.city} 官方入口`, url: x.official_url }))
+        ...app.subsidy.locals
+          .slice(0, 3)
+          .map((x) => ({ label: `${x.city} 官方入口`, url: x.official_url }))
       ]
     },
     {
@@ -280,15 +255,17 @@ function renderTrustedLinks() {
     const linksWrap = document.createElement("div");
     linksWrap.className = "todo-links";
 
-    group.links.filter((x) => x?.url).forEach((link) => {
-      const a = document.createElement("a");
-      a.className = "pill";
-      a.href = link.url;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = link.label || "官方連結";
-      linksWrap.append(a);
-    });
+    group.links
+      .filter((x) => x?.url)
+      .forEach((link) => {
+        const a = document.createElement("a");
+        a.className = "pill";
+        a.href = link.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = link.label || "官方連結";
+        linksWrap.append(a);
+      });
 
     card.append(linksWrap);
     wrap.append(card);
@@ -314,22 +291,6 @@ function fillSelectOptions() {
   });
 }
 
-function bindPlanner() {
-  const form = document.getElementById("planner-form");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const stageId = app.stageSelect.value;
-    const cityName = app.citySelect.value;
-
-    if (!stageId || !cityName) return;
-
-    savePlan(stageId, cityName);
-    renderTodoList(stageId, cityName);
-    renderCityQuick(cityName);
-    renderVaccineQuick(stageId);
-  });
-}
-
 function renderLastUpdated() {
   const latest = latestUpdatedDate(
     app.checklist.updated,
@@ -339,6 +300,25 @@ function renderLastUpdated() {
 
   const target = document.getElementById("last-updated");
   target.textContent = latest ? formatDate(latest.toISOString().slice(0, 10)) : "-";
+}
+
+function renderPlanner(stageId, cityName) {
+  saveState({ stageId, cityName });
+  renderTodoList(stageId, cityName);
+  renderCityQuick(cityName);
+  renderVaccineQuick(stageId);
+}
+
+function bindPlanner() {
+  const form = document.getElementById("planner-form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const stageId = app.stageSelect.value;
+    const cityName = app.citySelect.value;
+
+    if (!stageId || !cityName) return;
+    renderPlanner(stageId, cityName);
+  });
 }
 
 async function init() {
@@ -358,7 +338,7 @@ async function init() {
   renderLastUpdated();
   renderTrustedLinks();
 
-  const saved = getSavedPlan();
+  const saved = getSavedState();
   const defaultStage = saved.stageId && getStageById(saved.stageId)
     ? saved.stageId
     : app.checklist.stages?.[0]?.id;
@@ -370,9 +350,7 @@ async function init() {
   if (defaultCity) app.citySelect.value = defaultCity;
 
   if (defaultStage && defaultCity) {
-    renderTodoList(defaultStage, defaultCity);
-    renderCityQuick(defaultCity);
-    renderVaccineQuick(defaultStage);
+    renderPlanner(defaultStage, defaultCity);
   }
 }
 
